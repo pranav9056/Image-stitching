@@ -27,36 +27,52 @@ function [img,feature_space,distMat,feature_space_val,match1,match2,H,R,S,D]=sti
 %         
 %     end
 
-    %with harris
+
+    %with blobs and SIFT
     for i= 1:size(listing,1)
         imgstore{i} = im2double(imread([listing(i).folder,'/',listing(i).name]));
         temp=double(rgb2gray(imread([listing(i).folder,'/',listing(i).name])));
-        [rad,x,y] = harris(temp,2,1000,2,0);
-        %feature_space_val{i} = cat(2,x,y);
-        feature_space_val{i} = cat(2,y,x);
-        % adding points as row,column and not as x,y IMPORTANT
-%         feature_space{i} = cell(1,size(x,1));
-        temp1 = padarray(temp,[4,4],'replicate');
-        origx = 4;
-        origy = 4;
-        for j = 1:size(x,1)
-            xx = x(j);
-            yy = y(j);
-            r = 4;
-            val = temp1(origx+xx-r:origx+xx+r,origy+yy-r:origy+yy+r);
-            if j==1
-                feature_space{i} = val(:)';
-            else
-                feature_space{i} = cat(1,feature_space{i},val(:)');
-            end
-            
-            
-        end
+        [x,y,rad] = blob([listing(i).folder,'/',listing(i).name]);
+        feature_space{i} = find_sift(temp,cat(2,x,y,rad),1.5);
+        feature_space_val{i} = cat(2,x,y);
         img{i} = temp;
 
         
         
     end
+
+
+
+    %with harris
+%     for i= 1:size(listing,1)
+%         imgstore{i} = im2double(imread([listing(i).folder,'/',listing(i).name]));
+%         temp=double(rgb2gray(imread([listing(i).folder,'/',listing(i).name])));
+%         [rad,x,y] = harris(temp,2,1000,2,0);
+%         %feature_space_val{i} = cat(2,x,y);
+%         feature_space_val{i} = cat(2,y,x);
+%         % adding points as row,column and not as x,y IMPORTANT
+% %         feature_space{i} = cell(1,size(x,1));
+%         temp1 = padarray(temp,[4,4],'replicate');
+%         origx = 4;
+%         origy = 4;
+%         for j = 1:size(x,1)
+%             xx = x(j);
+%             yy = y(j);
+%             r = 4;
+%             val = temp1(origx+xx-r:origx+xx+r,origy+yy-r:origy+yy+r);
+%             if j==1
+%                 feature_space{i} = val(:)';
+%             else
+%                 feature_space{i} = cat(1,feature_space{i},val(:)');
+%             end
+%             
+%             
+%         end
+%         img{i} = temp;
+% 
+%         
+%         
+%     end
     %plotlines(imgstore{1},imgstore{2},feature_space_val{1},feature_space_val{2});
 %%------ code till here can be put into another function as feature extraction --------------------     
      distMat = dist2(feature_space{1},feature_space{2});    
@@ -81,6 +97,8 @@ function [img,feature_space,distMat,feature_space_val,match1,match2,H,R,S,D]=sti
     [i,j] = ind2sub(size(distMat),idxval);
     match1 = feature_space_val{1}(i,:);
     match2 = feature_space_val{2}(j,:);
+%    plotlines(imgstore{1},imgstore{2},match1,match2);
+
 
 %     for k = 1:noMatches
 %         [i,j]=ind2sub(size(distMat),idxval(k));

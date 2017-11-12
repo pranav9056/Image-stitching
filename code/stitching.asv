@@ -27,9 +27,25 @@ function [img,feature_space,distMat,feature_space_val,match1,match2,H,R,S,D]=sti
 %         
 %     end
 
+
+    %with blobs and SIFT
+    for i= 1:size(listing,1)
+        imgstore{i} = im2double(imread([listing(i).folder,'/',listing(i).name]));
+        temp=double(rgb2gray(imread([listing(i).folder,'/',listing(i).name])));
+        [x,y,rad] = blob([listing(i).folder,'/',listing(i).name]);
+        feature_space{i} = find_sift(temp,cat(2,x,y,rad),1.5)
+        feature_space_val{i} = cat(2,x,y);
+        img{i} = temp;
+
+        
+        
+    end
+
+
+
     %with harris
     for i= 1:size(listing,1)
-        imgstore{i} = im2double(imresize(imread([listing(i).folder,'/',listing(i).name]),.75));
+        imgstore{i} = im2double(imread([listing(i).folder,'/',listing(i).name]));
         temp=double(rgb2gray(imread([listing(i).folder,'/',listing(i).name])));
         [rad,x,y] = harris(temp,2,1000,2,0);
         %feature_space_val{i} = cat(2,x,y);
@@ -81,6 +97,8 @@ function [img,feature_space,distMat,feature_space_val,match1,match2,H,R,S,D]=sti
     [i,j] = ind2sub(size(distMat),idxval);
     match1 = feature_space_val{1}(i,:);
     match2 = feature_space_val{2}(j,:);
+    plotlines(imgstore{1},imgstore{2},match1,match2);
+
 
 %     for k = 1:noMatches
 %         [i,j]=ind2sub(size(distMat),idxval(k));
