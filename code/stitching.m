@@ -1,33 +1,11 @@
-function [img,feature_space,distMat,feature_space_val,match1,match2,H,R,S,D]=stitching(ImgFolder)
+function [canvas]=stitching(ImgFolder,name)
     listing = dir([ImgFolder,'/*.jpg']);
     img = cell(size(listing,1),1);
     feature_space = cell(size(listing,1),1);
     feature_space_val = cell(size(listing,1),1);
     imgstore=cell(size(listing,1),1);
-    %with blobs
-%     for i= 1:size(listing,1)
-%         temp=double(rgb2gray(imread([listing(i).folder,'/',listing(i).name])));
-%         [x,y,rad] = blob([listing(i).folder,'/',listing(i).name]);
-%         feature_space{i} = cell(1,size(x,1));
-%         temp1 = padarray(temp,[floor(max(rad)),floor(max(rad))],'replicate');
-%         origx = floor(max(rad));
-%         origy = origx;
-%         for j = 1:size(x,1)
-%             xx = y(j);
-%             yy = x(j);
-%             r = floor(rad(j));
-%             val = temp1(origx+xx-r:origx+xx+r,origy+yy-r:origy+yy+r);
-%             feature_space{i}{j} = val(:);
-%             
-%             
-%         end
-%         img{i} = temp;
-% 
-%         
-%         
-%     end
 
-
+    if(~strcmp(name,'hill'))
     %with blobs and SIFT
     for i= 1:size(listing,1)
         imgstore{i} = im2double(imread([listing(i).folder,'/',listing(i).name]));
@@ -36,44 +14,44 @@ function [img,feature_space,distMat,feature_space_val,match1,match2,H,R,S,D]=sti
         feature_space{i} = find_sift(temp,cat(2,x,y,rad),1.5);
         feature_space_val{i} = cat(2,x,y);
         img{i} = temp;
+       
+    end
+
+
+    else
+    %with harris
+    for i= 1:size(listing,1)
+        imgstore{i} = im2double(imread([listing(i).folder,'/',listing(i).name]));
+        temp=double(rgb2gray(imread([listing(i).folder,'/',listing(i).name])));
+        [rad,x,y] = harris(temp,2,1000,2,0);
+        %feature_space_val{i} = cat(2,x,y);
+        feature_space_val{i} = cat(2,y,x);
+        % adding points as row,column and not as x,y IMPORTANT
+%         feature_space{i} = cell(1,size(x,1));
+        temp1 = padarray(temp,[4,4],'replicate');
+        origx = 4;
+        origy = 4;
+        for j = 1:size(x,1)
+            xx = x(j);
+            yy = y(j);
+            r = 4;
+            val = temp1(origx+xx-r:origx+xx+r,origy+yy-r:origy+yy+r);
+            if j==1
+                feature_space{i} = val(:)';
+            else
+                feature_space{i} = cat(1,feature_space{i},val(:)');
+            end
+            
+            
+        end
+        img{i} = temp;
 
         
         
     end
-
-
-
-    %with harris
-%     for i= 1:size(listing,1)
-%         imgstore{i} = im2double(imread([listing(i).folder,'/',listing(i).name]));
-%         temp=double(rgb2gray(imread([listing(i).folder,'/',listing(i).name])));
-%         [rad,x,y] = harris(temp,2,1000,2,0);
-%         %feature_space_val{i} = cat(2,x,y);
-%         feature_space_val{i} = cat(2,y,x);
-%         % adding points as row,column and not as x,y IMPORTANT
-% %         feature_space{i} = cell(1,size(x,1));
-%         temp1 = padarray(temp,[4,4],'replicate');
-%         origx = 4;
-%         origy = 4;
-%         for j = 1:size(x,1)
-%             xx = x(j);
-%             yy = y(j);
-%             r = 4;
-%             val = temp1(origx+xx-r:origx+xx+r,origy+yy-r:origy+yy+r);
-%             if j==1
-%                 feature_space{i} = val(:)';
-%             else
-%                 feature_space{i} = cat(1,feature_space{i},val(:)');
-%             end
-%             
-%             
-%         end
-%         img{i} = temp;
-% 
-%         
-%         
-%     end
+    end
     %plotlines(imgstore{1},imgstore{2},feature_space_val{1},feature_space_val{2});
+
 %%------ code till here can be put into another function as feature extraction --------------------     
      distMat = dist2(feature_space{1},feature_space{2});    
 %     [tempval,idxval]= sort(distMat,2);
@@ -97,7 +75,7 @@ function [img,feature_space,distMat,feature_space_val,match1,match2,H,R,S,D]=sti
     [i,j] = ind2sub(size(distMat),idxval);
     match1 = feature_space_val{1}(i,:);
     match2 = feature_space_val{2}(j,:);
-%    plotlines(imgstore{1},imgstore{2},match1,match2);
+    %plotlines(imgstore{1},imgstore{2},match1,match2);
 
 
 %     for k = 1:noMatches
@@ -127,7 +105,6 @@ function [img,feature_space,distMat,feature_space_val,match1,match2,H,R,S,D]=sti
     maxy = ceil(max(yData(2),size(imgstore{2},1)));
     m1=0;
     m2=0;
-    size(trans_image)
     if(miny<0)
         m1=1;
         miny=miny-1;
@@ -137,23 +114,14 @@ function [img,feature_space,distMat,feature_space_val,match1,match2,H,R,S,D]=sti
         minx=minx-1;
     end
     panorama = zeros(maxy-miny*m1,maxx-minx*m2,3);
-    size(panorama)
     canvas2 = panorama;
-    size(canvas2)
 
     panorama(1:size(trans_image,1),1:size(trans_image,2),:)=trans_image(1:size(trans_image,1),1:size(trans_image,2),:);
     tt=imgstore{2};
-    size(tt,1);
-    size(tt,2);
-    size(tt);
     canvas2(1+abs(miny):abs(miny)+size(tt,1),abs(minx)+1:abs(minx)+size(tt,2),:)=tt(1:size(tt,1),1:size(tt,2),:);
-    disp('ddd')
-    disp(size(panorama));
-    size(canvas2);
     canvas = panorama + canvas2;
     overlap = panorama & canvas2;
     canvas(overlap) = canvas(overlap)/2;
-    imshow(canvas);
 
 
 

@@ -4,9 +4,11 @@ function [best_homography,best_ratio,min_src,min_dest]=ransac(match1,match2,iter
     best_homography=1;
     min_src = 0;
     min_dest = 0;
+    best_residual=0;
     t=1;
     while (t) 
         for i  = 1:iteration
+            residual = 0;
             [src,dest]=getStartingPoint(match1,match2,4);
             X=homographyEstimation(src,dest);
             inlier = 0;
@@ -25,6 +27,7 @@ function [best_homography,best_ratio,min_src,min_dest]=ransac(match1,match2,iter
                     outlier= outlier+1;
                 else
                     inlier = inlier+1;
+                    residual = residual + dist^2;
                 end
             end
             ratio = inlier/(inlier+outlier);
@@ -33,10 +36,18 @@ function [best_homography,best_ratio,min_src,min_dest]=ransac(match1,match2,iter
                 best_homography = X;
                 min_src = src;
                 min_dest = dest;
+                best_residual = residual/inlier;
+                best_inlier  = inlier;
             end
         end
         if(best_ratio >.3)
                 t=0;
+                disp('Residual');
+                disp(best_residual);
+                disp('Inliers');
+                disp(best_inlier);
+                disp('Ratio');
+                disp(best_ratio);
         end
     end
 end

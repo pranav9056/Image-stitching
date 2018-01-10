@@ -1,5 +1,4 @@
 function [cx,cy,rad] = blob(Img,iteration,sv,threshold_factor)
-tic
 disp(['Runnig for Image:',Img]);
 switch nargin
     case 3
@@ -70,7 +69,5 @@ for i = 1:size(cy)
 end
 
 close()
-toc
-disp('--------------------------------------------------------------');
-show_all_circles(img1,cx,cy,rad,'r',1.5);
+%show_all_circles(img1,cx,cy,rad,'r',1.5);
 
